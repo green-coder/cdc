@@ -1,0 +1,15 @@
+[package]
+name = "cdc-rs"
+version = "0.0.1"
+description = "Rabin fingerprint based Content-Defined Chunking"
+
+authors = ["Vincent Cantin <vincent.cantin@le-moulin-studio.com>"]
+
+homepage = "https://github.com/green-coder/cdc-rs"
+repository = "https://github.com/green-coder/cdc-rs"
+
+keywords = ["cdc", "rabin", "chunk"]
+
+license = "MIT License"
+
+[dependencies]
