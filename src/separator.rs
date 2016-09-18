@@ -5,40 +5,45 @@ pub struct Separator {
     pub hash: u64,
 }
 
-pub struct SeparatorIter<InputIter> {
-    iter: InputIter,
+pub struct SeparatorIter<I, F> {
+    iter: I,
+    predicate: F,
     rabin: Rabin64,
-    bitmask: u64,
-    masked_value: u64,
     index: u64,
 }
 
-impl<InputIter: Iterator<Item=u8>> SeparatorIter<InputIter> {
-    pub fn new(iter: InputIter) -> SeparatorIter<InputIter> {
+impl<I> SeparatorIter<I, fn(u64) -> bool> where I: Iterator<Item=u8> {
+    pub fn new(iter: I) -> SeparatorIter<I, fn(u64) -> bool> {
         // window_size: 1 << 6 == 64 bytes
-        Self::custom_new(iter, 6, (1u64 << 13) - 1, (1u64 << 13) - 1)
+        let separator_size_nb_bits = 6;
+
+        #[inline]
+        fn default_predicate(x: u64) -> bool {
+            const BITMASK: u64 = (1u64 << 13) - 1;
+            x & BITMASK == BITMASK
+        }
+
+        Self::custom_new(iter, separator_size_nb_bits, default_predicate)
     }
+}
 
-    pub fn custom_new(mut iter: InputIter,
+impl<I, F> SeparatorIter<I, F> where I: Iterator<Item=u8>, F: Fn(u64) -> bool {
+    pub fn custom_new(mut iter: I,
         separator_size_nb_bits: u32,
-        bitmask: u64,
-        masked_value: u64) -> SeparatorIter<InputIter> {
-
+        predicate: F) -> SeparatorIter<I, F> {
         let mut rabin = Rabin64::new(separator_size_nb_bits);
         let index = rabin.prefill_window(&mut iter) as u64;
 
         SeparatorIter {
             iter: iter,
+            predicate: predicate,
             rabin: rabin,
-            bitmask: bitmask,
-            masked_value: masked_value,
             index: index,
         }
-
     }
 }
 
-impl<InputIter: Iterator<Item=u8>> Iterator for SeparatorIter<InputIter> {
+impl<I, F> Iterator for SeparatorIter<I, F> where I: Iterator<Item=u8>, F: Fn(u64) -> bool {
     type Item = Separator;
 
     #[inline]
@@ -46,10 +51,10 @@ impl<InputIter: Iterator<Item=u8>> Iterator for SeparatorIter<InputIter> {
         while let Some(v) = self.iter.next() {
             self.rabin.slide(&v);
             self.index += 1;
-            if self.rabin.hash & self.bitmask == self.masked_value {
+            if (self.predicate)(self.rabin.hash) {
                 let separator = Some(Separator {index: self.index, hash: self.rabin.hash});
 
-                // Note: We skip consequent separators which may overlap the current one.
+                // Note: We skip subsequent separators which may overlap the current one.
                 self.rabin.reset();
                 self.index += self.rabin.prefill_window(&mut self.iter) as u64;
 
