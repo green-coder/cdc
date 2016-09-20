@@ -32,7 +32,7 @@ impl<I, F> SeparatorIter<I, F> where I: Iterator<Item=u8>, F: Fn(u64) -> bool {
         separator_size_nb_bits: u32,
         predicate: F) -> SeparatorIter<I, F> {
         let mut rabin = Rabin64::new(separator_size_nb_bits);
-        let index = rabin.prefill_window(&mut iter) as u64;
+        let index = rabin.reset_and_prefill_window(&mut iter) as u64;
 
         SeparatorIter {
             iter: iter,
@@ -55,8 +55,7 @@ impl<I, F> Iterator for SeparatorIter<I, F> where I: Iterator<Item=u8>, F: Fn(u6
                 let separator = Some(Separator {index: self.index, hash: self.rabin.hash});
 
                 // Note: We skip subsequent separators which may overlap the current one.
-                self.rabin.reset();
-                self.index += self.rabin.prefill_window(&mut self.iter) as u64;
+                self.index += self.rabin.reset_and_prefill_window(&mut self.iter) as u64;
 
                 return separator;
             }

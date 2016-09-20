@@ -2,7 +2,7 @@ use super::{Polynom, Polynom64};
 
 pub trait RollingHash64 {
     fn reset(&mut self);
-    fn prefill_window<I>(&mut self, &mut I) -> usize where I: Iterator<Item=u8>;
+    fn reset_and_prefill_window<I>(&mut self, &mut I) -> usize where I: Iterator<Item=u8>;
     fn slide(&mut self, &u8);
     fn get_hash(&self) -> &Polynom64;
 }
@@ -59,20 +59,19 @@ impl Rabin64 {
     pub fn new_with_polynom(window_size_nb_bits: u32, mod_polynom: &Polynom64) -> Rabin64 {
     	let window_size = 1 << window_size_nb_bits;
 
-        let mut rolling_hash = Rabin64 {
+        let mut window_data = Vec::with_capacity(window_size);
+        window_data.resize(window_size, 0);
+
+        Rabin64 {
             window_size: window_size,
             window_size_mask: window_size - 1,
             polynom_shift: mod_polynom.degree() - 8,
             out_table: Self::calculate_out_table(window_size, mod_polynom),
             mod_table: Self::calculate_mod_table(mod_polynom),
-            window_data: Vec::with_capacity(window_size),
+            window_data: window_data,
             window_index: 0,
             hash: 0,
-        };
-
-        rolling_hash.reset();
-
-        rolling_hash
+        }
     }
 
     #[cfg(test)]
@@ -99,17 +98,33 @@ impl RollingHash64 for Rabin64 {
     }
 
     // Attempt to fills the window - 1 byte.
-    fn prefill_window<I>(&mut self, iter: &mut I) -> usize where I: Iterator<Item=u8> {
+    fn reset_and_prefill_window<I>(&mut self, iter: &mut I) -> usize where I: Iterator<Item=u8> {
+        self.hash = 0;
         let mut nb_bytes_read = 0;
         for _ in 0..self.window_size-1 {
             match iter.next() {
                 Some(b) => {
-                    self.slide(&b);
+                    // Take the old value out of the window and the hash.
+                    // ... let's suppose that the buffer contains zeroes, do nothing.
+
+                    // Put the new value in the window and in the hash.
+                    self.window_data[self.window_index] = b;
+                    let mod_index = (self.hash >> self.polynom_shift) & 255;
+                    self.hash <<= 8;
+                    self.hash |= b as Polynom64;
+                    self.hash ^= self.mod_table[mod_index as usize];
+
+                    // Move the windowIndex to the next position.
+                    self.window_index = (self.window_index + 1) & self.window_size_mask;
+
                     nb_bytes_read += 1;
                 },
                 None => break,
             }
         }
+
+        // Because we didn't overwrite that element in the loop above.
+        self.window_data[self.window_index] = 0;
 
         nb_bytes_read
     }
