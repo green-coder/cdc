@@ -2,6 +2,7 @@ use super::{Polynom, Polynom64};
 
 pub trait RollingHash64 {
     fn reset(&mut self);
+    fn prefill_window<I>(&mut self, &mut I) -> usize where I: Iterator<Item=u8>;
     fn reset_and_prefill_window<I>(&mut self, &mut I) -> usize where I: Iterator<Item=u8>;
     fn slide(&mut self, &u8);
     fn get_hash(&self) -> &Polynom64;
@@ -98,6 +99,22 @@ impl RollingHash64 for Rabin64 {
     }
 
     // Attempt to fills the window - 1 byte.
+    fn prefill_window<I>(&mut self, iter: &mut I) -> usize where I: Iterator<Item=u8> {
+        let mut nb_bytes_read = 0;
+        for _ in 0..self.window_size-1 {
+            match iter.next() {
+                Some(b) => {
+                    self.slide(&b);
+                    nb_bytes_read += 1;
+                },
+                None => break,
+            }
+        }
+
+        nb_bytes_read
+    }
+
+    // Combines a reset with a prefill in an optimized way.
     fn reset_and_prefill_window<I>(&mut self, iter: &mut I) -> usize where I: Iterator<Item=u8> {
         self.hash = 0;
         let mut nb_bytes_read = 0;
