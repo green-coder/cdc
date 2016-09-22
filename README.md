@@ -38,10 +38,6 @@ There is a **huge** difference between the debug build and the release build in 
 
 I may try to improve the performance of the lib at some point, but for now they are good enough for my own usage.
 
-### Not on [crates.io](https://crates.io) yet?
-
-It might be published on crates.io once its design is stable.
-
 ### Getting started
 
 Example of usage:
