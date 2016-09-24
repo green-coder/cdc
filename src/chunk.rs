@@ -6,14 +6,14 @@ pub struct Chunk {
     pub separator_hash: u64,
 }
 
-pub struct ChunkIter<InputIter> {
-    separators: InputIter,
+pub struct ChunkIter<Iter> {
+    separators: Iter,
     stream_length: u64,
     last_separator_index: u64,
 }
 
-impl<InputIter: Iterator<Item=Separator>> ChunkIter<InputIter> {
-    pub fn new(iter: InputIter, stream_length: u64) -> ChunkIter<InputIter> {
+impl<Iter: Iterator<Item=Separator>> ChunkIter<Iter> {
+    pub fn new(iter: Iter, stream_length: u64) -> ChunkIter<Iter> {
         ChunkIter {
             separators: iter,
             stream_length: stream_length,
@@ -22,7 +22,7 @@ impl<InputIter: Iterator<Item=Separator>> ChunkIter<InputIter> {
     }
 }
 
-impl<InputIter: Iterator<Item=Separator>> Iterator for ChunkIter<InputIter> {
+impl<Iter: Iterator<Item=Separator>> Iterator for ChunkIter<Iter> {
     type Item = Chunk;
 
     fn next(&mut self) -> Option<Self::Item> {

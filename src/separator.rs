@@ -48,16 +48,16 @@ impl<I, F> Iterator for SeparatorIter<I, F> where I: Iterator<Item=u8>, F: Fn(u6
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        while let Some(v) = self.iter.next() {
-            self.rabin.slide(&v);
+        while let Some(byte) = self.iter.next() {
+            self.rabin.slide(&byte);
             self.index += 1;
             if (self.predicate)(self.rabin.hash) {
-                let separator = Some(Separator {index: self.index, hash: self.rabin.hash});
+                let separator = Separator {index: self.index, hash: self.rabin.hash};
 
                 // Note: We skip subsequent separators which may overlap the current one.
                 self.index += self.rabin.reset_and_prefill_window(&mut self.iter) as u64;
 
-                return separator;
+                return Some(separator);
             }
         }
 
