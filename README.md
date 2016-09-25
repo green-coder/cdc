@@ -46,7 +46,7 @@ To run them, use a command like:
 
     cargo run --example separator --release
 
-Note: At the moment, some examples are looking for a file named `myLargeFile.bin` which I didn't uploaded to Github. Please use your own file for testing.
+Note: At the moment, some examples are looking for a file named `myLargeFile.bin` which I didn't upload to Github. Please use your own file for testing.
 
 ### License
 
