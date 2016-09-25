@@ -1,14 +1,14 @@
 [package]
-name = "cdc-rs"
-version = "0.0.1"
-description = "Rabin fingerprint based Content-Defined Chunking"
+name = "cdc"
+version = "0.0.2"
+description = "Very useful library for performing a Content-Defined Chunking (CDC)"
 license = "MIT"
 
 authors = ["Vincent Cantin <vincent.cantin@le-moulin-studio.com>"]
-homepage = "https://github.com/green-coder/cdc-rs"
-repository = "https://github.com/green-coder/cdc-rs"
+homepage = "https://github.com/green-coder/cdc"
+repository = "https://github.com/green-coder/cdc"
 
-keywords = ["cdc", "rabin", "chunk", "chunking"]
+keywords = ["rabin", "cdc", "chunk", "chunking", "merkle"]
 exclude = [
   "*.bin"
 ]

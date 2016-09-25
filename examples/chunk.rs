@@ -1,4 +1,4 @@
-extern crate cdc_rs;
+extern crate cdc;
 
 use std::u64;
 use std::cmp::{min, max};
@@ -7,7 +7,7 @@ use std::io::prelude::*;
 use std::io::BufReader;
 use std::fs::File;
 
-use cdc_rs::*;
+use cdc::*;
 
 #[inline]
 fn my_default_predicate(x: u64) -> bool {

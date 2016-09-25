@@ -1,6 +1,6 @@
 ### Description
 
-This Rust crate contains useful classes for performing a *Content-Defined Chunking* (CDC).
+This Rust crate is a very useful library for performing a *Content-Defined Chunking* (CDC).
 
 ### Content-Defined Chunking
 
@@ -40,57 +40,13 @@ I may try to improve the performance of the lib at some point, but for now they 
 
 ### Getting started
 
-Example of usage:
+Each module is documented via an example which you can find in the `examples/` folder.
 
-```rust
-extern crate cdc_rs;
+To run them, use a command like:
 
-use std::u64;
-use std::cmp::{min, max};
-use std::io;
-use std::io::prelude::*;
-use std::io::BufReader;
-use std::fs::File;
+    cargo run --example separator --release
 
-use cdc_rs::*;
-
-fn find_chunks_in_file<S: Into<String>>(path: S) -> io::Result<()> {
-    let f = try!(File::open(path.into()));
-    let stream_length = f.metadata().unwrap().len();
-    let reader: BufReader<File> = BufReader::new(f);
-    let byte_iter = reader.bytes().map(|b| b.unwrap());
-    let separator_iter = SeparatorIter::new(byte_iter);
-    let chunk_iter = ChunkIter::new(separator_iter, stream_length);
-
-    let mut nb_chunk = 0;
-    let mut total_size = 0;
-    let mut smallest_size = u64::MAX;
-    let mut largest_size = 0;
-    let expected_size = 1 << 13;
-    let mut size_variance = 0;
-    for chunk in chunk_iter {
-        println!("Index: {}, size: {:6}, separator_hash: {:016x}", chunk.index, chunk.size, chunk.separator_hash);
-        nb_chunk += 1;
-        total_size += chunk.size;
-        smallest_size = min(smallest_size, chunk.size);
-        largest_size = max(largest_size, chunk.size);
-        size_variance += (chunk.size - expected_size).pow(2);
-    }
-
-    println!("{} chunks with an average size of {} bytes.", nb_chunk, total_size / nb_chunk);
-    println!("Expected chunk size: {} bytes", expected_size);
-    println!("Smallest chunk: {} bytes.", smallest_size);
-    println!("Largest chunk: {} bytes.", largest_size);
-    println!("Standard size deviation: {} bytes.",
-        (size_variance as f64 / nb_chunk as f64).sqrt() as u64);
-
-	Ok(())
-}
-
-fn main() {
-	find_chunks_in_file("my_large_file.bin").unwrap();
-}
-```
+Note: At the moment, some examples are looking for a file named `myLargeFile.bin` which I didn't uploaded to Github. Please use your own file for testing.
 
 ### License
 

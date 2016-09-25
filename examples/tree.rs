@@ -1,6 +1,6 @@
-extern crate cdc_rs;
+extern crate cdc;
 
-use cdc_rs::*;
+use cdc::*;
 
 type IntHash = u32;
 
