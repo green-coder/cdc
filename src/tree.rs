@@ -1,32 +1,34 @@
+/// Example of type to use with the generic structures below.
 //pub type Hash256 = [u8; 256/8];
-pub type Hash256 = usize;
 
-pub struct HashedChunk {
-    pub hash: Hash256,
+pub struct HashedChunk<H> {
+    pub hash: H,
     pub level: usize,
 }
 
 #[derive(Debug)]
-pub struct HashNode {
-    pub hash: Hash256,  // The hash of data from some of the fields below.
+pub struct Node<H> {
+    pub hash: H,  // The hash acting as the ID of this node.
     pub level: usize,
-    pub children: Vec<Hash256>,
+    pub children: Vec<H>,
 }
 
-pub struct NodeIter<I, F> {
+pub struct NodeIter<I, F, H> {
     // Configuration
     chunks: I,
     new_node: F,
     max_children: usize,
 
     // Internal state
-    level_hashes: Vec<Vec<Hash256>>, // level_hashes[level] -> Vec<Hash256>
-    out_buffer: Vec<HashNode>, // Fifo
+    level_hashes: Vec<Vec<H>>, // level_hashes[level] -> Vec<H>
+    out_buffer: Vec<Node<H>>, // Fifo
 }
 
-impl<I, F> NodeIter<I, F>
-    where I: Iterator<Item=HashedChunk>, F: Fn(usize, &Vec<Hash256>) -> HashNode {
-    pub fn new(iter: I, new_node: F, max_node_children: usize) -> NodeIter<I, F> {
+impl<I, F, H> NodeIter<I, F, H> where
+        I: Iterator<Item=HashedChunk<H>>,
+        F: Fn(usize, &Vec<H>) -> Node<H>,
+        H: Copy {
+    pub fn new(iter: I, new_node: F, max_node_children: usize) -> NodeIter<I, F, H> {
         NodeIter {
             chunks: iter,
             new_node: new_node,
@@ -36,7 +38,7 @@ impl<I, F> NodeIter<I, F>
         }
     }
 
-    fn add_at_level(&mut self, level: usize, hash: Hash256) {
+    fn add_at_level(&mut self, level: usize, hash: H) {
         // Ensures that the vector is large enough.
         if level >= self.level_hashes.len() {
             self.level_hashes.resize(level + 1, vec![]);
@@ -77,9 +79,11 @@ impl<I, F> NodeIter<I, F>
 
 }
 
-impl<I, F> Iterator for NodeIter<I, F>
-    where I: Iterator<Item=HashedChunk>, F: Fn(usize, &Vec<Hash256>) -> HashNode {
-    type Item = HashNode;
+impl<I, F, H> Iterator for NodeIter<I, F, H> where
+        I: Iterator<Item=HashedChunk<H>>,
+        F: Fn(usize, &Vec<H>) -> Node<H>,
+        H: Copy {
+    type Item = Node<H>;
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
