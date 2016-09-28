@@ -2,6 +2,7 @@
 name = "cdc"
 version = "0.0.2"
 description = "Very useful library for performing a Content-Defined Chunking (CDC)"
+readme = "README.md"
 license = "MIT"
 
 authors = ["Vincent Cantin <vincent.cantin@le-moulin-studio.com>"]
@@ -14,3 +15,7 @@ exclude = [
 ]
 
 [dependencies]
+
+[dev-dependencies]
+ring = "0.4.3"
+arrayref = "0.3.2"
