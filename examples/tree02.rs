@@ -43,6 +43,7 @@ type Hash256 = [u8; 256/8];
 
 fn new_hash_node(level: usize, children: &Vec<Hash256>) -> Node<Hash256> {
     let mut ctx = digest::Context::new(&digest::SHA256);
+    ctx.update(&[1u8]); // To mark that it is a node, not a chunk.
     for child in children {
         ctx.update(child);
     }
@@ -74,6 +75,7 @@ fn chunk_file(path: &String) -> io::Result<()> {
         // Calculates the sha256 of the chunks.
         let chunk_reader = file_chunk_reader(path, &chunk).unwrap();
         let mut digest_reader = DigestReader::new(chunk_reader, digest::Context::new(&digest::SHA256));
+        digest_reader.digest.update(&[0u8]); // To mark that it is a chunk, not a node.
         io::copy(&mut digest_reader, &mut io::sink()).unwrap();
         let digest = digest_reader.digest.finish();
         let hash: Hash256 = array_ref![digest.as_ref(), 0, 256/8].clone();
@@ -92,7 +94,7 @@ fn chunk_file(path: &String) -> io::Result<()> {
     let mut total_children = 0u64;
     let mut level_counts = vec![];
     for node in NodeIter::new(hashed_chunk_iter, new_hash_node, 0) {
-        //println!("{:?}", node.level);
+        println!("Node: {{level: {}, children.len(): {}}}", node.level, node.children.len());
         nb_nodes += 1;
         total_children += node.children.len() as u64;
 
