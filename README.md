@@ -1,14 +1,31 @@
-### Description
+cdc
+========
 
-This Rust crate is a very useful library for performing a *Content-Defined Chunking* (CDC).
+A library for performing *Content-Defined Chunking* (CDC) on data streams. Implemented using generic iterators, very easy to use.
 
-### Content-Defined Chunking
+- [API Documentation](https://docs.rs/cdc/)
 
-CDC is when you look for some specific pattern inside a data stream, and you use them as separator for cutting your file into small pieces.
+## Example
 
-It is useful when your data has changed and you want to express the new version based on the previous one: one way of doing it is to refer to the pieces of the previous data which were not modified and to the new pieces which contains the modified bits.
+```rust
+  let reader: BufReader<File> = BufReader::new(file);
+  let byte_iter = reader.bytes().map(|b| b.unwrap());
 
-### What's in the crate
+  // Finds and iterate on the separators.
+  for separator in SeparatorIter::new(byte_iter) {
+    println!("Index: {}, hash: {:016x}", separator.index, separator.hash);
+  }
+```
+
+Each module is documented via an example which you can find in the `examples/` folder.
+
+To run them, use a command like:
+
+    cargo run --example separator --release
+
+**Note:** Some examples are looking for a file named `myLargeFile.bin` which I didn't upload to Github. Please use your own files for testing.
+
+## What's in the crate
 
 From low level to high level:
 
@@ -24,30 +41,20 @@ From low level to high level:
 
 * `ChunkIter`, an adaptor which takes an `Iterator<Item=Separator>` as input and which enumerates chunks.
 
-### Implementation details
+## Implementation details
 
 * The library is not cutting any files, it only provides information on how to do it.
 
 * You can change the default window size used by `Rabin64`, and how the `SeparatorIter` is choosing the separator.
 
-* The design of this crate is not final and is probably going to change in the future.
+* The design of this crate may be subject to changes sometime in the future. I am waiting for some features of `Rust` to mature up, specially the [`impl Trait`](https://github.com/rust-lang/rust/issues/34511) feature.
 
-### Performance
+## Performance
 
 There is a **huge** difference between the debug build and the release build in terms of performance. Remember that when you test the lib, use `cargo run --release`.
 
-I may try to improve the performance of the lib at some point, but for now they are good enough for my own usage.
+I may try to improve the performance of the lib at some point, but for now it is good enough for most usages.
 
-### Getting started
+## License
 
-Each module is documented via an example which you can find in the `examples/` folder.
-
-To run them, use a command like:
-
-    cargo run --example separator --release
-
-Note: At the moment, some examples are looking for a file named `myLargeFile.bin` which I didn't upload to Github. Please use your own file for testing.
-
-### License
-
-This piece of software is licensed under the [MIT license](LICENSE.txt).
+Coding with ❤️ , licensed under the terms of the [MIT license](LICENSE.txt).
