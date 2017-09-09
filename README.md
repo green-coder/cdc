@@ -11,7 +11,7 @@ A library for performing *Content-Defined Chunking* (CDC) on data streams. Imple
   let reader: BufReader<File> = BufReader::new(file);
   let byte_iter = reader.bytes().map(|b| b.unwrap());
 
-  // Finds and iterate on the separators.
+  // Finds and iterates on the separators.
   for separator in SeparatorIter::new(byte_iter) {
     println!("Index: {}, hash: {:016x}", separator.index, separator.hash);
   }
@@ -57,4 +57,4 @@ I may try to improve the performance of the lib at some point, but for now it is
 
 ## License
 
-Coding with ❤️ , licensed under the terms of the [MIT license](LICENSE.txt).
+Coded with ❤️ , licensed under the terms of the [MIT license](LICENSE.txt).
