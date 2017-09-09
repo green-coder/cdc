@@ -9,7 +9,7 @@ authors = ["Vincent Cantin <vincent.cantin@le-moulin-studio.com>"]
 homepage = "https://github.com/green-coder/cdc"
 repository = "https://github.com/green-coder/cdc"
 
-keywords = ["rabin", "cdc", "chunk", "chunking", "merkle", "dedup"]
+keywords = ["rabin", "cdc", "chunk", "merkle", "dedup"]
 exclude = [
   "*.bin"
 ]
