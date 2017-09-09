@@ -17,5 +17,5 @@ exclude = [
 [dependencies]
 
 [dev-dependencies]
-ring = "0.4.3"
+ring = "0.12.1"
 arrayref = "0.3.2"
