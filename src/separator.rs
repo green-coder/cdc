@@ -1,4 +1,4 @@
-use super::{RollingHash64, Rabin64};
+use super::{Rabin64, RollingHash64};
 
 pub struct Separator {
     pub index: u64,
@@ -12,7 +12,10 @@ pub struct SeparatorIter<I, F> {
     index: u64,
 }
 
-impl<I> SeparatorIter<I, fn(u64) -> bool> where I: Iterator<Item=u8> {
+impl<I> SeparatorIter<I, fn(u64) -> bool>
+where
+    I: Iterator<Item = u8>,
+{
     pub fn new(iter: I) -> SeparatorIter<I, fn(u64) -> bool> {
         // window_size: 1 << 6 == 64 bytes
         let separator_size_nb_bits = 6;
@@ -27,10 +30,16 @@ impl<I> SeparatorIter<I, fn(u64) -> bool> where I: Iterator<Item=u8> {
     }
 }
 
-impl<I, F> SeparatorIter<I, F> where I: Iterator<Item=u8>, F: Fn(u64) -> bool {
-    pub fn custom_new(mut iter: I,
+impl<I, F> SeparatorIter<I, F>
+where
+    I: Iterator<Item = u8>,
+    F: Fn(u64) -> bool,
+{
+    pub fn custom_new(
+        mut iter: I,
         separator_size_nb_bits: u32,
-        predicate: F) -> SeparatorIter<I, F> {
+        predicate: F,
+    ) -> SeparatorIter<I, F> {
         let mut rabin = Rabin64::new(separator_size_nb_bits);
         let index = rabin.reset_and_prefill_window(&mut iter) as u64;
 
@@ -43,7 +52,11 @@ impl<I, F> SeparatorIter<I, F> where I: Iterator<Item=u8>, F: Fn(u64) -> bool {
     }
 }
 
-impl<I, F> Iterator for SeparatorIter<I, F> where I: Iterator<Item=u8>, F: Fn(u64) -> bool {
+impl<I, F> Iterator for SeparatorIter<I, F>
+where
+    I: Iterator<Item = u8>,
+    F: Fn(u64) -> bool,
+{
     type Item = Separator;
 
     #[inline]
@@ -52,7 +65,10 @@ impl<I, F> Iterator for SeparatorIter<I, F> where I: Iterator<Item=u8>, F: Fn(u6
             self.rabin.slide(&byte);
             self.index += 1;
             if (self.predicate)(self.rabin.hash) {
-                let separator = Separator {index: self.index, hash: self.rabin.hash};
+                let separator = Separator {
+                    index: self.index,
+                    hash: self.rabin.hash,
+                };
 
                 // Note: We skip subsequent separators which may overlap the current one.
                 self.index += self.rabin.reset_and_prefill_window(&mut self.iter) as u64;
@@ -124,5 +140,4 @@ mod tests {
             assert_eq!(converter.to_level((9u64 << n) - 1), 4);
         }
     }
-
 }

@@ -4,9 +4,9 @@ extern crate ring;
 #[macro_use]
 extern crate arrayref;
 
+use std::fs::File;
 use std::io::prelude::*;
 use std::io::{self, BufReader, SeekFrom};
-use std::fs::File;
 
 use cdc::*;
 use ring::digest;
@@ -39,7 +39,7 @@ fn file_chunk_reader(path: &String, chunk: &Chunk) -> io::Result<io::Take<BufRea
     Ok(BufReader::new(file).take(chunk.size))
 }
 
-type Hash256 = [u8; 256/8];
+type Hash256 = [u8; 256 / 8];
 
 fn new_hash_node(level: usize, children: &Vec<Hash256>) -> Node<Hash256> {
     let mut ctx = digest::Context::new(&digest::SHA256);
@@ -48,12 +48,12 @@ fn new_hash_node(level: usize, children: &Vec<Hash256>) -> Node<Hash256> {
         ctx.update(child);
     }
     let digest = ctx.finish();
-    let hash: Hash256 = array_ref![digest.as_ref(), 0, 256/8].clone();
+    let hash: Hash256 = array_ref![digest.as_ref(), 0, 256 / 8].clone();
 
     Node {
         hash: hash,
         level: level,
-        children: children.clone()
+        children: children.clone(),
     }
 }
 
@@ -74,11 +74,12 @@ fn chunk_file(path: &String) -> io::Result<()> {
     let hashed_chunk_iter = chunk_iter.map(|chunk| {
         // Calculates the sha256 of the chunks.
         let chunk_reader = file_chunk_reader(path, &chunk).unwrap();
-        let mut digest_reader = DigestReader::new(chunk_reader, digest::Context::new(&digest::SHA256));
+        let mut digest_reader =
+            DigestReader::new(chunk_reader, digest::Context::new(&digest::SHA256));
         digest_reader.digest.update(&[0u8]); // To mark that it is a chunk, not a node.
         io::copy(&mut digest_reader, &mut io::sink()).unwrap();
         let digest = digest_reader.digest.finish();
-        let hash: Hash256 = array_ref![digest.as_ref(), 0, 256/8].clone();
+        let hash: Hash256 = array_ref![digest.as_ref(), 0, 256 / 8].clone();
 
         // Calculates the level of the separators.
         let level = HashToLevel::custom_new(13, 3).to_level(chunk.separator_hash);
@@ -94,7 +95,11 @@ fn chunk_file(path: &String) -> io::Result<()> {
     let mut total_children = 0u64;
     let mut level_counts = vec![];
     for node in NodeIter::new(hashed_chunk_iter, new_hash_node, 0) {
-        println!("Node: {{level: {}, children.len(): {}}}", node.level, node.children.len());
+        println!(
+            "Node: {{level: {}, children.len(): {}}}",
+            node.level,
+            node.children.len()
+        );
         nb_nodes += 1;
         total_children += node.children.len() as u64;
 
@@ -107,9 +112,9 @@ fn chunk_file(path: &String) -> io::Result<()> {
     println!("Average number of children: {}.", total_children / nb_nodes);
     println!("Level counts: {:?}.", level_counts);
 
-	Ok(())
+    Ok(())
 }
 
 fn main() {
-	chunk_file(&"myLargeFile.bin".to_owned()).unwrap();
+    chunk_file(&"myLargeFile.bin".to_owned()).unwrap();
 }

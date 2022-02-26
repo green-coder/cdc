@@ -1,11 +1,11 @@
 extern crate cdc;
 
-use std::u64;
-use std::cmp::{min, max};
+use std::cmp::{max, min};
+use std::fs::File;
 use std::io;
 use std::io::prelude::*;
 use std::io::BufReader;
-use std::fs::File;
+use std::u64;
 
 use cdc::*;
 
@@ -31,7 +31,10 @@ fn chunk_file<S: Into<String>>(path: S) -> io::Result<()> {
     let expected_size = 1 << 13;
     let mut size_variance = 0;
     for chunk in chunk_iter {
-        println!("Index: {}, size: {:6}, separator_hash: {:016x}", chunk.index, chunk.size, chunk.separator_hash);
+        println!(
+            "Index: {}, size: {:6}, separator_hash: {:016x}",
+            chunk.index, chunk.size, chunk.separator_hash
+        );
         nb_chunk += 1;
         total_size += chunk.size;
         smallest_size = min(smallest_size, chunk.size);
@@ -39,16 +42,22 @@ fn chunk_file<S: Into<String>>(path: S) -> io::Result<()> {
         size_variance += (chunk.size as i64 - expected_size as i64).pow(2);
     }
 
-    println!("{} chunks with an average size of {} bytes.", nb_chunk, total_size / nb_chunk);
+    println!(
+        "{} chunks with an average size of {} bytes.",
+        nb_chunk,
+        total_size / nb_chunk
+    );
     println!("Expected chunk size: {} bytes", expected_size);
     println!("Smallest chunk: {} bytes.", smallest_size);
     println!("Largest chunk: {} bytes.", largest_size);
-    println!("Standard size deviation: {} bytes.",
-        (size_variance as f64 / nb_chunk as f64).sqrt() as u64);
+    println!(
+        "Standard size deviation: {} bytes.",
+        (size_variance as f64 / nb_chunk as f64).sqrt() as u64
+    );
 
-	Ok(())
+    Ok(())
 }
 
 fn main() {
-	chunk_file("myLargeFile.bin").unwrap();
+    chunk_file("myLargeFile.bin").unwrap();
 }

@@ -1,9 +1,9 @@
 extern crate cdc;
 
+use std::fs::File;
 use std::io;
 use std::io::prelude::*;
 use std::io::BufReader;
-use std::fs::File;
 
 use cdc::*;
 
@@ -19,9 +19,9 @@ fn chunk_file<S: Into<String>>(path: S) -> io::Result<()> {
     }
     println!("We found {} separators.", nb_separator);
 
-	Ok(())
+    Ok(())
 }
 
 fn main() {
-	chunk_file("myLargeFile.bin").unwrap();
+    chunk_file("myLargeFile.bin").unwrap();
 }

@@ -9,7 +9,7 @@ pub struct HashedChunk<H> {
 
 #[derive(Debug)]
 pub struct Node<H> {
-    pub hash: H,  // The hash acting as the ID of this node.
+    pub hash: H, // The hash acting as the ID of this node.
     pub level: usize,
     pub children: Vec<H>,
 }
@@ -22,13 +22,15 @@ pub struct NodeIter<I, F, H> {
 
     // Internal state
     level_hashes: Vec<Vec<H>>, // level_hashes[level] -> Vec<H>
-    out_buffer: Vec<Node<H>>, // Fifo
+    out_buffer: Vec<Node<H>>,  // Fifo
 }
 
-impl<I, F, H> NodeIter<I, F, H> where
-        I: Iterator<Item=HashedChunk<H>>,
-        F: Fn(usize, &Vec<H>) -> Node<H>,
-        H: Copy {
+impl<I, F, H> NodeIter<I, F, H>
+where
+    I: Iterator<Item = HashedChunk<H>>,
+    F: Fn(usize, &Vec<H>) -> Node<H>,
+    H: Copy,
+{
     pub fn new(iter: I, new_node: F, max_node_children: usize) -> NodeIter<I, F, H> {
         NodeIter {
             chunks: iter,
@@ -61,7 +63,7 @@ impl<I, F, H> NodeIter<I, F, H> where
                 let level_up_hash = self.level_hashes[level][0];
                 self.level_hashes[level].clear();
                 self.add_at_level(level + 1, level_up_hash);
-            },
+            }
             _ => {
                 let node = (self.new_node)(level, &self.level_hashes[level]);
                 let level_up_hash = node.hash;
@@ -77,13 +79,14 @@ impl<I, F, H> NodeIter<I, F, H> where
             self.output_level(level);
         }
     }
-
 }
 
-impl<I, F, H> Iterator for NodeIter<I, F, H> where
-        I: Iterator<Item=HashedChunk<H>>,
-        F: Fn(usize, &Vec<H>) -> Node<H>,
-        H: Copy {
+impl<I, F, H> Iterator for NodeIter<I, F, H>
+where
+    I: Iterator<Item = HashedChunk<H>>,
+    F: Fn(usize, &Vec<H>) -> Node<H>,
+    H: Copy,
+{
     type Item = Node<H>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -96,16 +99,14 @@ impl<I, F, H> Iterator for NodeIter<I, F, H> where
                 self.add_at_level(0, chunk.hash);
                 self.output_levels(chunk.level);
                 self.out_buffer.reverse();
-            }
-            else {
+            } else {
                 let len = self.level_hashes.len();
                 if len > 0 {
                     // Flush the remaining hashes.
                     self.output_levels(len);
                     self.level_hashes.clear();
                     self.out_buffer.reverse();
-                }
-                else {
+                } else {
                     return None;
                 }
             }
