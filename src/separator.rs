@@ -44,10 +44,10 @@ where
         let index = rabin.reset_and_prefill_window(&mut iter) as u64;
 
         SeparatorIter {
-            iter: iter,
-            predicate: predicate,
-            rabin: rabin,
-            index: index,
+            iter,
+            predicate,
+            rabin,
+            index,
         }
     }
 }
@@ -95,8 +95,8 @@ impl HashToLevel {
 
     pub fn custom_new(lvl0_nb_bits: u32, lvlup_nb_bits: u32) -> HashToLevel {
         HashToLevel {
-            lvl0_nb_bits: lvl0_nb_bits,
-            lvlup_nb_bits: lvlup_nb_bits,
+            lvl0_nb_bits,
+            lvlup_nb_bits,
             lvlup_bitmask: (1u64 << lvlup_nb_bits) - 1,
         }
     }

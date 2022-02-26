@@ -34,7 +34,7 @@ where
     pub fn new(iter: I, new_node: F, max_node_children: usize) -> NodeIter<I, F, H> {
         NodeIter {
             chunks: iter,
-            new_node: new_node,
+            new_node,
             max_children: max_node_children,
             level_hashes: Vec::with_capacity(16),
             out_buffer: Vec::with_capacity(16),
@@ -57,7 +57,7 @@ where
 
     fn output_level(&mut self, level: usize) {
         match self.level_hashes[level].len() {
-            0 => return, // Don't output empty nodes.
+            0 => {} // Don't output empty nodes.
             1 => {
                 // Don't output a node with only 1 hash, move it to the upper level.
                 let level_up_hash = self.level_hashes[level][0];
@@ -91,7 +91,7 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            if self.out_buffer.len() > 0 {
+            if !self.out_buffer.is_empty() {
                 return self.out_buffer.pop();
             }
 

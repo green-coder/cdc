@@ -34,13 +34,13 @@ pub const MOD_POLYNOM: Polynom64 = 0x3DA3358B4DC173;
 impl Rabin64 {
     pub fn calculate_out_table(window_size: usize, mod_polynom: &Polynom64) -> [Polynom64; 256] {
         let mut out_table = [0; 256];
-        for b in 0..256 {
+        for (b, elem) in out_table.iter_mut().enumerate() {
             let mut hash = (b as Polynom64).modulo(mod_polynom);
             for _ in 0..window_size - 1 {
                 hash <<= 8;
                 hash = hash.modulo(mod_polynom);
             }
-            out_table[b] = hash;
+            *elem = hash;
         }
 
         out_table
@@ -49,9 +49,9 @@ impl Rabin64 {
     pub fn calculate_mod_table(mod_polynom: &Polynom64) -> [Polynom64; 256] {
         let mut mod_table = [0; 256];
         let k = mod_polynom.degree();
-        for b in 0..256 {
+        for (b, elem) in mod_table.iter_mut().enumerate() {
             let p: Polynom64 = (b as Polynom64) << k;
-            mod_table[b] = p.modulo(mod_polynom) | p;
+            *elem = p.modulo(mod_polynom) | p;
         }
 
         mod_table
@@ -64,16 +64,15 @@ impl Rabin64 {
     pub fn new_with_polynom(window_size_nb_bits: u32, mod_polynom: &Polynom64) -> Rabin64 {
         let window_size = 1 << window_size_nb_bits;
 
-        let mut window_data = Vec::with_capacity(window_size);
-        window_data.resize(window_size, 0);
+        let window_data = vec![0; window_size];
 
         Rabin64 {
-            window_size: window_size,
+            window_size,
             window_size_mask: window_size - 1,
             polynom_shift: mod_polynom.degree() - 8,
             out_table: Self::calculate_out_table(window_size, mod_polynom),
             mod_table: Self::calculate_mod_table(mod_polynom),
-            window_data: window_data,
+            window_data,
             window_index: 0,
             hash: 0,
         }

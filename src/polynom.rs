@@ -18,7 +18,7 @@ impl Polynom for Polynom64 {
             p ^= m << (p.degree() - m.degree());
         }
 
-        return p;
+        p
     }
 }
 
