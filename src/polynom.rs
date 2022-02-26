@@ -9,14 +9,7 @@ pub type Polynom64 = u64;
 impl Polynom for Polynom64 {
     // The degree of the polynom.
     fn degree(&self) -> i32 {
-        for i in (0..63).rev() {
-            if *self >= ((1 as Self) << i) {
-                return i;
-            }
-        }
-
-        // The "0" polynom has a degree -1.
-        return -1;
+        63 - self.leading_zeros() as i32
     }
 
     fn modulo(&self, m: &Self) -> Self {
