@@ -27,15 +27,15 @@ impl<R: Read> DigestReader<R> {
 
 impl<R: Read> Read for DigestReader<R> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        let size = try!(self.inner.read(buf));
+        let size = self.inner.read(buf)?;
         self.digest.update(&buf[0..size]);
         Ok(size)
     }
 }
 
 fn file_chunk_reader(path: &String, chunk: &Chunk) -> io::Result<io::Take<BufReader<File>>> {
-    let mut file = try!(File::open(path));
-    try!(file.seek(SeekFrom::Start(chunk.index)));
+    let mut file = File::open(path)?;
+    file.seek(SeekFrom::Start(chunk.index))?;
     Ok(BufReader::new(file).take(chunk.size))
 }
 
@@ -59,7 +59,7 @@ fn new_hash_node(level: usize, children: &Vec<Hash256>) -> Node<Hash256> {
 
 fn chunk_file(path: &String) -> io::Result<()> {
     // Opens the file and gets the byte_iter.
-    let f = try!(File::open(path));
+    let f = File::open(path)?;
     let stream_length = f.metadata().unwrap().len();
     let reader: BufReader<File> = BufReader::new(f);
     let byte_iter = reader.bytes().map(|b| b.unwrap());

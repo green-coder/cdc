@@ -4,11 +4,11 @@ use cdc::*;
 
 type IntHash = u32;
 
-static mut hash_id: IntHash = 0;
+static mut HASH_ID: IntHash = 0;
 fn get_new_hash_id() -> IntHash {
     unsafe {
-        let id = hash_id;
-        hash_id += 1;
+        let id = HASH_ID;
+        HASH_ID += 1;
         id
     }
 }
@@ -29,7 +29,7 @@ fn main() {
     });
 
     unsafe {
-        hash_id = levels.len() as IntHash;
+        HASH_ID = levels.len() as IntHash;
     }
 
     for node in NodeIter::new(hashed_chunk_it, my_new_node, 0) {

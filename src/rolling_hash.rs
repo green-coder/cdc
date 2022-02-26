@@ -2,9 +2,9 @@ use super::{Polynom, Polynom64};
 
 pub trait RollingHash64 {
     fn reset(&mut self);
-    fn prefill_window<I>(&mut self, &mut I) -> usize where I: Iterator<Item=u8>;
-    fn reset_and_prefill_window<I>(&mut self, &mut I) -> usize where I: Iterator<Item=u8>;
-    fn slide(&mut self, &u8);
+    fn prefill_window<I>(&mut self, iter: &mut I) -> usize where I: Iterator<Item=u8>;
+    fn reset_and_prefill_window<I>(&mut self, iter: &mut I) -> usize where I: Iterator<Item=u8>;
+    fn slide(&mut self, byte: &u8);
     fn get_hash(&self) -> &Polynom64;
 }
 

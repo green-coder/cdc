@@ -8,7 +8,7 @@ use std::fs::File;
 use cdc::*;
 
 fn chunk_file<S: Into<String>>(path: S) -> io::Result<()> {
-    let f = try!(File::open(path.into()));
+    let f = File::open(path.into())?;
     let reader: BufReader<File> = BufReader::new(f);
     let byte_iter = reader.bytes().map(|b| b.unwrap());
 
