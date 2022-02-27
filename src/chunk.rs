@@ -1,4 +1,4 @@
-use super::{Separator};
+use super::Separator;
 
 pub struct Chunk {
     pub index: u64,
@@ -12,17 +12,17 @@ pub struct ChunkIter<Iter> {
     last_separator_index: u64,
 }
 
-impl<Iter: Iterator<Item=Separator>> ChunkIter<Iter> {
+impl<Iter: Iterator<Item = Separator>> ChunkIter<Iter> {
     pub fn new(iter: Iter, stream_length: u64) -> ChunkIter<Iter> {
         ChunkIter {
             separators: iter,
-            stream_length: stream_length,
+            stream_length,
             last_separator_index: 0,
         }
     }
 }
 
-impl<Iter: Iterator<Item=Separator>> Iterator for ChunkIter<Iter> {
+impl<Iter: Iterator<Item = Separator>> Iterator for ChunkIter<Iter> {
     type Item = Chunk;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -30,24 +30,23 @@ impl<Iter: Iterator<Item=Separator>> Iterator for ChunkIter<Iter> {
             Some(separator) => {
                 let chunk_size = separator.index - self.last_separator_index;
                 self.last_separator_index = separator.index;
-                return Some(Chunk {
+                Some(Chunk {
                     index: self.last_separator_index,
                     size: chunk_size,
                     separator_hash: separator.hash,
-                });
-            },
+                })
+            }
             None => {
                 let chunk_size = self.stream_length - self.last_separator_index;
                 self.last_separator_index = self.stream_length;
                 if chunk_size > 0 {
-                    return Some(Chunk {
+                    Some(Chunk {
                         index: self.last_separator_index,
                         size: chunk_size,
                         separator_hash: 0, // any value is ok, last chunk of the stream.
-                    });
-                }
-                else {
-                    return None;
+                    })
+                } else {
+                    None
                 }
             }
         }

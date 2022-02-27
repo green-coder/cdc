@@ -9,7 +9,7 @@ pub struct HashedChunk<H> {
 
 #[derive(Debug)]
 pub struct Node<H> {
-    pub hash: H,  // The hash acting as the ID of this node.
+    pub hash: H, // The hash acting as the ID of this node.
     pub level: usize,
     pub children: Vec<H>,
 }
@@ -22,17 +22,19 @@ pub struct NodeIter<I, F, H> {
 
     // Internal state
     level_hashes: Vec<Vec<H>>, // level_hashes[level] -> Vec<H>
-    out_buffer: Vec<Node<H>>, // Fifo
+    out_buffer: Vec<Node<H>>,  // Fifo
 }
 
-impl<I, F, H> NodeIter<I, F, H> where
-        I: Iterator<Item=HashedChunk<H>>,
-        F: Fn(usize, &Vec<H>) -> Node<H>,
-        H: Copy {
+impl<I, F, H> NodeIter<I, F, H>
+where
+    I: Iterator<Item = HashedChunk<H>>,
+    F: Fn(usize, &Vec<H>) -> Node<H>,
+    H: Copy,
+{
     pub fn new(iter: I, new_node: F, max_node_children: usize) -> NodeIter<I, F, H> {
         NodeIter {
             chunks: iter,
-            new_node: new_node,
+            new_node,
             max_children: max_node_children,
             level_hashes: Vec::with_capacity(16),
             out_buffer: Vec::with_capacity(16),
@@ -55,13 +57,13 @@ impl<I, F, H> NodeIter<I, F, H> where
 
     fn output_level(&mut self, level: usize) {
         match self.level_hashes[level].len() {
-            0 => return, // Don't output empty nodes.
+            0 => {} // Don't output empty nodes.
             1 => {
                 // Don't output a node with only 1 hash, move it to the upper level.
                 let level_up_hash = self.level_hashes[level][0];
                 self.level_hashes[level].clear();
                 self.add_at_level(level + 1, level_up_hash);
-            },
+            }
             _ => {
                 let node = (self.new_node)(level, &self.level_hashes[level]);
                 let level_up_hash = node.hash;
@@ -77,18 +79,19 @@ impl<I, F, H> NodeIter<I, F, H> where
             self.output_level(level);
         }
     }
-
 }
 
-impl<I, F, H> Iterator for NodeIter<I, F, H> where
-        I: Iterator<Item=HashedChunk<H>>,
-        F: Fn(usize, &Vec<H>) -> Node<H>,
-        H: Copy {
+impl<I, F, H> Iterator for NodeIter<I, F, H>
+where
+    I: Iterator<Item = HashedChunk<H>>,
+    F: Fn(usize, &Vec<H>) -> Node<H>,
+    H: Copy,
+{
     type Item = Node<H>;
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            if self.out_buffer.len() > 0 {
+            if !self.out_buffer.is_empty() {
                 return self.out_buffer.pop();
             }
 
@@ -96,16 +99,14 @@ impl<I, F, H> Iterator for NodeIter<I, F, H> where
                 self.add_at_level(0, chunk.hash);
                 self.output_levels(chunk.level);
                 self.out_buffer.reverse();
-            }
-            else {
+            } else {
                 let len = self.level_hashes.len();
                 if len > 0 {
                     // Flush the remaining hashes.
                     self.output_levels(len);
                     self.level_hashes.clear();
                     self.out_buffer.reverse();
-                }
-                else {
+                } else {
                     return None;
                 }
             }

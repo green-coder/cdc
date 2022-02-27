@@ -17,5 +17,10 @@ exclude = [
 [dependencies]
 
 [dev-dependencies]
-ring = "0.12.1"
+ring = "0.16.1"
 arrayref = "0.3.2"
+criterion = "0.3"
+
+[[bench]]
+name = "benchmarks"
+harness = false
