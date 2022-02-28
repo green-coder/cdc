@@ -8,7 +8,7 @@
 
 # 0.1.1
 
-Performance improvements contributed by Alexis Weis (https://github.com/aawsome).
+Performance improvements contributed by Alex Weiss (https://github.com/aawsome).
 
 ## Changed
 - [Issue #2] Performance improvement via compatible source code changes.
