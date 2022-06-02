@@ -1,5 +1,3 @@
-
-
 use cdc::*;
 
 type IntHash = u32;

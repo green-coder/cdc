@@ -1,6 +1,3 @@
-
-
-
 #[macro_use]
 extern crate arrayref;
 
@@ -18,10 +15,7 @@ pub struct DigestReader<R> {
 
 impl<R: Read> DigestReader<R> {
     pub fn new(inner: R, digest: digest::Context) -> DigestReader<R> {
-        DigestReader {
-            inner,
-            digest,
-        }
+        DigestReader { inner, digest }
     }
 }
 
@@ -84,10 +78,7 @@ fn chunk_file(path: &String) -> io::Result<()> {
         // Calculates the level of the separators.
         let level = HashToLevel::custom_new(13, 3).to_level(chunk.separator_hash);
 
-        HashedChunk {
-            hash,
-            level,
-        }
+        HashedChunk { hash, level }
     });
 
     // Builds a tree of hash nodes.
