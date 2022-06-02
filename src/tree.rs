@@ -1,5 +1,5 @@
-/// Example of type to use with the generic structures below.
-//pub type Hash256 = [u8; 256/8];
+// Example of type to use with the generic structures below.
+// pub type Hash256 = [u8; 256/8];
 
 #[derive(Debug)]
 pub struct HashedChunk<H> {
