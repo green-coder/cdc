@@ -19,8 +19,8 @@ pub struct DigestReader<R> {
 impl<R: Read> DigestReader<R> {
     pub fn new(inner: R, digest: digest::Context) -> DigestReader<R> {
         DigestReader {
-            inner: inner,
-            digest: digest,
+            inner,
+            digest,
         }
     }
 }
@@ -48,11 +48,11 @@ fn new_hash_node(level: usize, children: &Vec<Hash256>) -> Node<Hash256> {
         ctx.update(child);
     }
     let digest = ctx.finish();
-    let hash: Hash256 = array_ref![digest.as_ref(), 0, 256 / 8].clone();
+    let hash: Hash256 = *array_ref![digest.as_ref(), 0, 256 / 8];
 
     Node {
-        hash: hash,
-        level: level,
+        hash,
+        level,
         children: children.clone(),
     }
 }
@@ -79,14 +79,14 @@ fn chunk_file(path: &String) -> io::Result<()> {
         digest_reader.digest.update(&[0u8]); // To mark that it is a chunk, not a node.
         io::copy(&mut digest_reader, &mut io::sink()).unwrap();
         let digest = digest_reader.digest.finish();
-        let hash: Hash256 = array_ref![digest.as_ref(), 0, 256 / 8].clone();
+        let hash: Hash256 = *array_ref![digest.as_ref(), 0, 256 / 8];
 
         // Calculates the level of the separators.
         let level = HashToLevel::custom_new(13, 3).to_level(chunk.separator_hash);
 
         HashedChunk {
-            hash: hash,
-            level: level,
+            hash,
+            level,
         }
     });
 

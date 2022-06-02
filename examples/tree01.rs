@@ -16,7 +16,7 @@ fn get_new_hash_id() -> IntHash {
 fn my_new_node(level: usize, children: &Vec<IntHash>) -> Node<IntHash> {
     Node {
         hash: get_new_hash_id(),
-        level: level,
+        level,
         children: children.clone(),
     }
 }

@@ -113,6 +113,12 @@ impl HashToLevel {
     }
 }
 
+impl Default for HashToLevel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

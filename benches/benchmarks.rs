@@ -2,7 +2,7 @@ extern crate cdc;
 extern crate criterion;
 
 use cdc::{Rabin64, RollingHash64};
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
 
 pub fn slide_benchmarks(c: &mut Criterion) {
     for i in [1_000, 10_000, 100_000] {

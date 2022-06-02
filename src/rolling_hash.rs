@@ -83,7 +83,7 @@ impl Rabin64 {
         for v in bytes {
             self.hash <<= 8;
             self.hash |= *v as Polynom64;
-            self.hash = self.hash.modulo(&mod_polynom);
+            self.hash = self.hash.modulo(mod_polynom);
         }
     }
 }
