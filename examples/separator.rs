@@ -1,4 +1,4 @@
-extern crate cdc;
+
 
 use std::fs::File;
 use std::io;

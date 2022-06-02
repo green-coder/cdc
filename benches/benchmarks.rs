@@ -1,5 +1,5 @@
-extern crate cdc;
-extern crate criterion;
+
+
 
 use cdc::{Rabin64, RollingHash64};
 use criterion::{criterion_group, criterion_main, Criterion};

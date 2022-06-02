@@ -1,5 +1,5 @@
-extern crate cdc;
-extern crate ring;
+
+
 
 #[macro_use]
 extern crate arrayref;
