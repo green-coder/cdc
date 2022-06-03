@@ -124,6 +124,7 @@ impl RollingHash64 for Rabin64 {
         I: Iterator<Item = u8>,
     {
         self.hash = 0;
+        let mut window_index = 0;
         let mut nb_bytes_read = 0;
         for _ in 0..self.window_size - 1 {
             match iter.next() {
@@ -132,14 +133,15 @@ impl RollingHash64 for Rabin64 {
                     // ... let's suppose that the buffer contains zeroes, do nothing.
 
                     // Put the new value in the window and in the hash.
-                    self.window_data[self.window_index] = b;
+                    self.window_data[window_index] = b;
                     let mod_index = (self.hash >> self.polynom_shift) & 255;
                     self.hash <<= 8;
                     self.hash |= b as Polynom64;
                     self.hash ^= self.mod_table[mod_index as usize];
 
                     // Move the windowIndex to the next position.
-                    self.window_index = (self.window_index + 1) & self.window_size_mask;
+                    // We reset to zero, so no need to check for wraparound
+                    window_index += 1;
 
                     nb_bytes_read += 1;
                 }
@@ -147,8 +149,9 @@ impl RollingHash64 for Rabin64 {
             }
         }
 
-        // Because we didn't overwrite that element in the loop above.
-        self.window_data[self.window_index] = 0;
+        // Fill the remaining window slots with zeros
+        self.window_data[window_index..].fill(0);
+        self.window_index = window_index;
 
         nb_bytes_read
     }
@@ -219,6 +222,32 @@ mod tests {
             rabin2.slide(&data[i]);
 
             //println!("{:02} {:02} {:016x} {:016x} {:?}", i, block.len(), rabin1.hash, rabin2.hash, block);
+            assert_eq!(rabin1.hash, rabin2.hash);
+        }
+    }
+
+    #[test]
+    fn short_prefill_iter() {
+        let mut rabin1 = Rabin64::new(5);
+        let mut rabin2 = Rabin64::new(5);
+
+        // Fill the window with non-zero values, before resetting
+        for i in 1..100 {
+            rabin1.slide(&i);
+            rabin2.slide(&i);
+        }
+
+        let prefill = 0..5;
+        rabin1.reset_and_prefill_window(&mut prefill.clone());
+        rabin2.reset();
+        for i in prefill {
+            rabin2.slide(&i);
+        }
+        assert_eq!(rabin1.hash, rabin2.hash);
+
+        for i in 0..100 {
+            rabin1.slide(&i);
+            rabin2.slide(&i);
             assert_eq!(rabin1.hash, rabin2.hash);
         }
     }
