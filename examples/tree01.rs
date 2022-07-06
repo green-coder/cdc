@@ -1,22 +1,17 @@
-extern crate cdc;
-
+use std::sync::atomic::{AtomicU32, Ordering};
 use cdc::*;
 
 type IntHash = u32;
 
-static mut HASH_ID: IntHash = 0;
+static HASH_ID: AtomicU32 = AtomicU32::new(0);
 fn get_new_hash_id() -> IntHash {
-    unsafe {
-        let id = HASH_ID;
-        HASH_ID += 1;
-        id
-    }
+    HASH_ID.fetch_add(1, Ordering::Relaxed)
 }
 
 fn my_new_node(level: usize, children: &Vec<IntHash>) -> Node<IntHash> {
     Node {
         hash: get_new_hash_id(),
-        level: level,
+        level,
         children: children.clone(),
     }
 }
@@ -29,9 +24,7 @@ fn main() {
         level: *level,
     });
 
-    unsafe {
-        HASH_ID = levels.len() as IntHash;
-    }
+    HASH_ID.store(levels.len() as _, Ordering::Relaxed);
 
     for node in NodeIter::new(hashed_chunk_it, my_new_node, 0) {
         println!("{:?}", node);

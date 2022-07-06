@@ -2,12 +2,23 @@ use super::{Polynom, Polynom64};
 
 pub trait RollingHash64 {
     fn reset(&mut self);
-    fn prefill_window<I>(&mut self, iter: &mut I) -> usize
+
+    /// Attempt to fills the window - 1 byte.
+    fn prefill_window<I>(&mut self, iter: I) -> usize
     where
         I: Iterator<Item = u8>;
-    fn reset_and_prefill_window<I>(&mut self, iter: &mut I) -> usize
+
+    /// Combine a reset, and prefill_window
+    ///
+    /// This should have the same effect as calling reset() and prefill_window(),
+    /// but an implementation may be able to do so more efficiently.
+    fn reset_and_prefill_window<I>(&mut self, iter: I) -> usize
     where
-        I: Iterator<Item = u8>;
+        I: Iterator<Item = u8>,
+    {
+        self.reset();
+        self.prefill_window(iter)
+    }
     fn slide(&mut self, byte: &u8);
     fn get_hash(&self) -> &Polynom64;
 }
@@ -32,7 +43,7 @@ pub struct Rabin64 {
 pub const MOD_POLYNOM: Polynom64 = 0x3DA3358B4DC173;
 
 impl Rabin64 {
-    pub fn calculate_out_table(window_size: usize, mod_polynom: &Polynom64) -> [Polynom64; 256] {
+    fn calculate_out_table(window_size: usize, mod_polynom: &Polynom64) -> [Polynom64; 256] {
         let mut out_table = [0; 256];
         for (b, elem) in out_table.iter_mut().enumerate() {
             let mut hash = (b as Polynom64).modulo(mod_polynom);
@@ -46,7 +57,7 @@ impl Rabin64 {
         out_table
     }
 
-    pub fn calculate_mod_table(mod_polynom: &Polynom64) -> [Polynom64; 256] {
+    fn calculate_mod_table(mod_polynom: &Polynom64) -> [Polynom64; 256] {
         let mut mod_table = [0; 256];
         let k = mod_polynom.degree();
         for (b, elem) in mod_table.iter_mut().enumerate() {
@@ -57,11 +68,13 @@ impl Rabin64 {
         mod_table
     }
 
-    pub fn new(window_size_nb_bits: u32) -> Rabin64 {
+    pub fn new(window_size_nb_bits: u32) -> Self {
         Self::new_with_polynom(window_size_nb_bits, &MOD_POLYNOM)
     }
 
-    pub fn new_with_polynom(window_size_nb_bits: u32, mod_polynom: &Polynom64) -> Rabin64 {
+    pub fn new_with_polynom(window_size_nb_bits: u32, mod_polynom: &Polynom64) -> Self {
+        // We don't really want to allocate 4 GiB of memory for the window.
+        assert!(window_size_nb_bits < 32);
         let window_size = 1 << window_size_nb_bits;
 
         let window_data = vec![0; window_size];
@@ -83,15 +96,14 @@ impl Rabin64 {
         for v in bytes {
             self.hash <<= 8;
             self.hash |= *v as Polynom64;
-            self.hash = self.hash.modulo(&mod_polynom);
+            self.hash = self.hash.modulo(mod_polynom);
         }
     }
 }
 
 impl RollingHash64 for Rabin64 {
     fn reset(&mut self) {
-        self.window_data.clear();
-        self.window_data.resize(self.window_size, 0);
+        self.window_data.fill(0);
         self.window_index = 0;
         self.hash = 0;
 
@@ -99,52 +111,40 @@ impl RollingHash64 for Rabin64 {
         // self.slide(1);
     }
 
-    // Attempt to fills the window - 1 byte.
-    fn prefill_window<I>(&mut self, iter: &mut I) -> usize
+    fn prefill_window<I>(&mut self, iter: I) -> usize
     where
         I: Iterator<Item = u8>,
     {
         let mut nb_bytes_read = 0;
-        for _ in 0..self.window_size - 1 {
-            match iter.next() {
-                Some(b) => {
-                    self.slide(&b);
-                    nb_bytes_read += 1;
-                }
-                None => break,
-            }
+        for byte in iter.take(self.window_size - 1) {
+            self.slide(&byte);
+            nb_bytes_read += 1;
         }
 
         nb_bytes_read
     }
 
-    // Combines a reset with a prefill in an optimized way.
-    fn reset_and_prefill_window<I>(&mut self, iter: &mut I) -> usize
+    fn reset_and_prefill_window<I>(&mut self, iter: I) -> usize
     where
         I: Iterator<Item = u8>,
     {
         self.hash = 0;
         let mut nb_bytes_read = 0;
-        for _ in 0..self.window_size - 1 {
-            match iter.next() {
-                Some(b) => {
-                    // Take the old value out of the window and the hash.
-                    // ... let's suppose that the buffer contains zeroes, do nothing.
+        for b in iter.take(self.window_size - 1) {
+            // Take the old value out of the window and the hash.
+            // ... let's suppose that the buffer contains zeroes, do nothing.
 
-                    // Put the new value in the window and in the hash.
-                    self.window_data[self.window_index] = b;
-                    let mod_index = (self.hash >> self.polynom_shift) & 255;
-                    self.hash <<= 8;
-                    self.hash |= b as Polynom64;
-                    self.hash ^= self.mod_table[mod_index as usize];
+            // Put the new value in the window and in the hash.
+            self.window_data[self.window_index] = b;
+            let mod_index = (self.hash >> self.polynom_shift) & 255;
+            self.hash <<= 8;
+            self.hash |= b as Polynom64;
+            self.hash ^= self.mod_table[mod_index as usize];
 
-                    // Move the windowIndex to the next position.
-                    self.window_index = (self.window_index + 1) & self.window_size_mask;
+            // Move the windowIndex to the next position.
+            self.window_index = (self.window_index + 1) & self.window_size_mask;
 
-                    nb_bytes_read += 1;
-                }
-                None => break,
-            }
+            nb_bytes_read += 1;
         }
 
         // Because we didn't overwrite that element in the loop above.
