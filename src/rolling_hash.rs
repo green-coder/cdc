@@ -8,7 +8,7 @@ pub trait RollingHash64 {
     fn reset_and_prefill_window<I>(&mut self, iter: &mut I) -> usize
     where
         I: Iterator<Item = u8>;
-    fn slide(&mut self, byte: &u8);
+    fn slide(&mut self, byte: u8);
     fn get_hash(&self) -> &Polynom64;
 }
 
@@ -108,7 +108,7 @@ impl RollingHash64 for Rabin64 {
         for _ in 0..self.window_size - 1 {
             match iter.next() {
                 Some(b) => {
-                    self.slide(&b);
+                    self.slide(b);
                     nb_bytes_read += 1;
                 }
                 None => break,
@@ -154,16 +154,16 @@ impl RollingHash64 for Rabin64 {
     }
 
     #[inline]
-    fn slide(&mut self, byte: &u8) {
+    fn slide(&mut self, byte: u8) {
         // Take the old value out of the window and the hash.
         let out_value = self.window_data[self.window_index];
         self.hash ^= self.out_table[out_value as usize];
 
         // Put the new value in the window and in the hash.
-        self.window_data[self.window_index] = *byte;
+        self.window_data[self.window_index] = byte;
         let mod_index = (self.hash >> self.polynom_shift) & 255;
         self.hash <<= 8;
-        self.hash |= *byte as Polynom64;
+        self.hash |= byte as Polynom64;
         self.hash ^= self.mod_table[mod_index as usize];
 
         // Move the windowIndex to the next position.
@@ -216,7 +216,7 @@ mod tests {
             rabin1.reset();
             rabin1.hash_block(block, &MOD_POLYNOM);
 
-            rabin2.slide(&data[i]);
+            rabin2.slide(data[i]);
 
             //println!("{:02} {:02} {:016x} {:016x} {:?}", i, block.len(), rabin1.hash, rabin2.hash, block);
             assert_eq!(rabin1.hash, rabin2.hash);

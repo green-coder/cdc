@@ -62,7 +62,7 @@ where
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(byte) = self.iter.next() {
-            self.rabin.slide(&byte);
+            self.rabin.slide(byte);
             self.index += 1;
             if (self.predicate)(self.rabin.hash) {
                 let separator = Separator {
